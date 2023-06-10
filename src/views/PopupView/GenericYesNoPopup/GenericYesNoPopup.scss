@@ -14,20 +14,33 @@
   overflow: hidden;
 
   .Header {
-    align-self: stretch;
+    // align-self: stretch;
     height: 40px;
-    box-shadow: 0px 2px 15px 0px rgba(0,0,0,0.4);
+    box-shadow: 0px 2px 15px 0px rgba(0, 0, 0, 0.4);
     color: white;
     font-weight: 900;
     font-size: 18px;
     background-color: $darkThemeFirstColor;
 
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    align-content: center;
+
+    .Title {
+      margin-left: 12px;
+      flex-basis: 90%;
+      align-self: center;
+    }
+
+    .CloseIcon {
+      width: 24px;
+      height: 24px;
+      &:hover {
+        cursor: pointer;
+      }
+    }
   }
 
   .Content {
