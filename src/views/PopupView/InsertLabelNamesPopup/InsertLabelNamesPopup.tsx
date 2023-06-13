@@ -2,13 +2,23 @@ import React, { useState } from 'react';
 import './InsertLabelNamesPopup.scss';
 import { GenericYesNoPopup } from '../GenericYesNoPopup/GenericYesNoPopup';
 import { PopupWindowType } from '../../../data/enums/PopupWindowType';
-import { updateLabelNames } from '../../../store/labels/actionCreators';
-import { updateActivePopupType, updatePerClassColorationStatus } from '../../../store/general/actionCreators';
+import {
+    updateActiveImageIndex,
+    updateActiveLabelNameId,
+    updateFirstLabelCreatedFlag,
+    updateImageData,
+    updateLabelNames,
+  } from '../../../store/labels/actionCreators';
+import {
+    updateActivePopupType,
+    updatePerClassColorationStatus,
+    updateProjectData,
+  } from '../../../store/general/actionCreators';
 import { AppState } from '../../../store';
 import { connect } from 'react-redux';
 import Scrollbars from 'react-custom-scrollbars-2';
 import { ImageButton } from '../../Common/ImageButton/ImageButton';
-import { LabelName } from '../../../store/labels/types';
+import { ImageData, LabelName } from '../../../store/labels/types';
 import { LabelUtil } from '../../../utils/LabelUtil';
 import { LabelsSelector } from '../../../store/selectors/LabelsSelector';
 import { LabelActions } from '../../../logic/actions/LabelActions';
@@ -22,6 +32,8 @@ import { NotificationUtil } from '../../../utils/NotificationUtil';
 import { NotificationsDataMap } from '../../../data/info/NotificationsData';
 import { Notification } from '../../../data/enums/Notification';
 import { StyledTextField } from '../../Common/StyledTextField/StyledTextField';
+import { PopupActions } from '../../../logic/actions/PopupActions';
+import { ProjectData } from '../../../store/general/types';
 
 interface IProps {
     updateActivePopupTypeAction: (activePopupType: PopupWindowType) => any;
@@ -31,6 +43,12 @@ interface IProps {
     isUpdate: boolean;
     projectType: ProjectType;
     enablePerClassColoration: boolean;
+    updateProjectData: (projectData: ProjectData) => any;
+    updateActiveImageIndex: (activeImageIndex: number) => any;
+    updateActiveLabelNameId: (activeLabelId: string) => any;
+    updateLabelNames: (labelNames: LabelName[]) => any;
+    updateImageData: (imageData: ImageData[]) => any;
+    updateFirstLabelCreatedFlag: (firstLabelCreatedFlag: boolean) => any;
 }
 
 const InsertLabelNamesPopup: React.FC<IProps> = (
@@ -41,7 +59,13 @@ const InsertLabelNamesPopup: React.FC<IProps> = (
         submitNewNotificationAction,
         isUpdate,
         projectType,
-        enablePerClassColoration
+        enablePerClassColoration,
+        updateProjectData,
+        updateActiveImageIndex,
+        updateActiveLabelNameId,
+        updateFirstLabelCreatedFlag,
+        updateImageData,
+        updateLabelNames
     }) => {
     const [labelNames, setLabelNames] = useState(LabelsSelector.getLabelNames());
 
@@ -232,6 +256,16 @@ const InsertLabelNamesPopup: React.FC<IProps> = (
         </div>);
     };
 
+    const onClose = () => {
+        updateActiveLabelNameId(null);
+        updateLabelNames([]);
+        updateProjectData({ type: null, name: 'my-project-name' });
+        updateActiveImageIndex(null);
+        updateImageData([]);
+        updateFirstLabelCreatedFlag(false);
+        PopupActions.close();
+      };
+
     return (
         <GenericYesNoPopup
             title={isUpdate ? 'Edit labels' : 'Create labels'}
@@ -240,6 +274,7 @@ const InsertLabelNamesPopup: React.FC<IProps> = (
             onAccept={isUpdate ? safeOnUpdateAcceptCallback : safeOnCreateAcceptCallback}
             rejectLabel={isUpdate ? 'Cancel' : 'Load labels from file'}
             onReject={isUpdate ? onUpdateRejectCallback : onCreateRejectCallback}
+            onClose={onClose}
         />);
 };
 
@@ -247,7 +282,13 @@ const mapDispatchToProps = {
     updateActivePopupTypeAction: updateActivePopupType,
     updateLabelNamesAction: updateLabelNames,
     updatePerClassColorationStatusAction: updatePerClassColorationStatus,
-    submitNewNotificationAction: submitNewNotification
+    submitNewNotificationAction: submitNewNotification,
+    updateActiveLabelNameId: updateActiveLabelNameId,
+    updateProjectData: updateProjectData,
+    updateLabelNames: updateLabelNames,
+    updateActiveImageIndex: updateActiveImageIndex,
+    updateImageData: updateImageData,
+    updateFirstLabelCreatedFlag: updateFirstLabelCreatedFlag,
 };
 
 const mapStateToProps = (state: AppState) => ({

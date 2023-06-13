@@ -13,6 +13,7 @@ interface IProps {
     disableAcceptButton?: boolean;
     rejectLabel?: string;
     onReject?: () => any;
+    onClose?: () => any;
     skipRejectButton?: boolean;
     disableRejectButton?: boolean;
 }
@@ -27,6 +28,7 @@ export const GenericYesNoPopup: React.FC<IProps> = (
         disableAcceptButton,
         rejectLabel,
         onReject,
+        onClose,
         skipRejectButton,
         disableRejectButton
     }) => {
@@ -41,8 +43,13 @@ export const GenericYesNoPopup: React.FC<IProps> = (
 
     return (
         <div className='GenericYesNoPopup'>
-            <div className='Header'>
-                {title}
+            <div className="Header">
+                <div className="Title">{title}</div>
+                    <img
+                    src="ico/close-2.png"
+                    className="CloseIcon"
+                    onClick={onClose}
+                    ></img>
             </div>
             <div className='Content'>
                 {renderContent()}
