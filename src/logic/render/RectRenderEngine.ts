@@ -119,6 +119,7 @@ export class RectRenderEngine extends BaseRenderEngine {
             }
         }
         this.endRectTransformation()
+        this.isRectUnderMouseDraggable = false;
     };
 
     public mouseMoveHandler = (data: EditorData) => {
@@ -126,15 +127,43 @@ export class RectRenderEngine extends BaseRenderEngine {
             const isOverImage: boolean = RenderEngineUtil.isMouseOverImage(data);
             if (isOverImage && !this.startResizeRectAnchor) {
                 const labelRect: LabelRect = this.getRectUnderMouseInsideEdges(data);
+                
                 if (!!labelRect && !this.isInProgress()) {
                     if (LabelsSelector.getHighlightedLabelId() !== labelRect.id) {
-                        // store.dispatch(updateHighlightedLabelId(labelRect.id))
+                        store.dispatch(updateHighlightedLabelId(labelRect.id))
                     }
-                    // console.log("Mouse move detected");
-                    // let delta:IPoint = { x: data.mousePositionOnViewPortContent.x - this.previousMousePosition.x,
-                    //     y: data.mousePositionOnViewPortContent.y - this.previousMousePosition.y }
-                    // RectUtil.translate(labelRect.rect, delta)
-                    // this.drawInactiveRect(labelRect, data)
+
+                    console.log("Mouse move detected");
+                    let mousePositionOnViewPortContent = RenderEngineUtil.transferPointFromViewPortContentToImage(data.mousePositionOnViewPortContent, data)
+                    let previousMousePositionOnViewPortContent = RenderEngineUtil.transferPointFromViewPortContentToImage(this.previousMousePosition, data)
+
+                    let delta:IPoint = { x: mousePositionOnViewPortContent.x - previousMousePositionOnViewPortContent.x,
+                        y: mousePositionOnViewPortContent.y - previousMousePositionOnViewPortContent.y }
+                        
+                    console.log(delta);
+
+                    const delta2: IPoint = PointUtil.subtract(data.mousePositionOnViewPortContent, this.previousMousePosition);
+
+                    if(this.isRectUnderMouseDraggable) {
+                        // const rect: IRect = this.calculateRectRelativeToActiveImage(labelRect.rect, data);
+                        const translatedRect: IRect = RectUtil.translate(labelRect.rect, delta)
+    
+                        const imageData = LabelsSelector.getActiveImageData();
+                        imageData.labelRects = imageData.labelRects.map((rect: LabelRect) => {
+                            if (rect.id === labelRect.id) {
+                                return {
+                                    ...labelRect,
+                                    rect: translatedRect
+                                };
+                            }
+                            return labelRect;
+                        });
+                        store.dispatch(updateImageDataById(imageData.id, imageData));
+
+                    }
+
+
+
                 } else {
                     if (LabelsSelector.getHighlightedLabelId() !== null) {
                         store.dispatch(updateHighlightedLabelId(null))
@@ -165,6 +194,10 @@ export class RectRenderEngine extends BaseRenderEngine {
             this.drawCurrentlyCreatedRect(data.mousePositionOnViewPortContent, data.viewPortContentImageRect);
             this.updateCursorStyle(data);
         }
+    }
+
+    private dragSelectedRect() {
+
     }
 
     private drawCurrentlyCreatedRect(mousePosition: IPoint, imageRect: IRect) {
