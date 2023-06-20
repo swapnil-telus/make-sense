@@ -48,14 +48,16 @@ export class RectRenderEngine extends BaseRenderEngine {
     public mouseDownHandler = (data: EditorData) => {
         const isMouseOverImage: boolean = RenderEngineUtil.isMouseOverImage(data);
         const isMouseOverCanvas: boolean = RenderEngineUtil.isMouseOverCanvas(data);
+
         if (isMouseOverCanvas) {
+
             const rectUnderMouseNearEdges: LabelRect = this.getRectUnderMouseNearEdges(data);
             const rectUnderMouseInsideEdges: LabelRect = this.getRectUnderMouseInsideEdges(data);
-            // const isMouseInsideRect = RectUtil.isPointInside(rectUnderMouse.rect, data.mousePositionOnViewPortContent) 
+
             if (!!rectUnderMouseNearEdges) {
                 const rect: IRect = this.calculateRectRelativeToActiveImage(rectUnderMouseNearEdges.rect, data);
                 const anchorUnderMouse: RectAnchor = this.getAnchorUnderMouseByRect(rect, data.mousePositionOnViewPortContent, data.viewPortContentImageRect);
-                // console.log(!!rectUnderMouseNearEdges);
+
                 if (!!anchorUnderMouse && rectUnderMouseNearEdges.status === LabelStatus.ACCEPTED) {
                     store.dispatch(updateActiveLabelId(rectUnderMouseNearEdges.id));
                     this.startRectResize(anchorUnderMouse);
@@ -67,14 +69,11 @@ export class RectRenderEngine extends BaseRenderEngine {
                 }
             } 
             else if (!!rectUnderMouseInsideEdges) {
-                // const rect: IRect = this.calculateRectRelativeToActiveImage(rectUnderMouseInsideEdges.rect, data);
-                console.log("Mouse down detected");
                 this.isRectUnderMouseDraggable = true;
                 this.previousMousePosition = data.mousePositionOnViewPortContent;
-
+                store.dispatch(updateActiveLabelId(LabelsSelector.getHighlightedLabelId()));
             }
             else if (isMouseOverImage) {
-
                 this.startRectCreation(data.mousePositionOnViewPortContent);
             }
         }
@@ -126,44 +125,42 @@ export class RectRenderEngine extends BaseRenderEngine {
         if (!!data.viewPortContentImageRect && !!data.mousePositionOnViewPortContent) {
             const isOverImage: boolean = RenderEngineUtil.isMouseOverImage(data);
             if (isOverImage && !this.startResizeRectAnchor) {
-                const labelRect: LabelRect = this.getRectUnderMouseInsideEdges(data);
+                const labelRectUnderMouseInsideEdges: LabelRect = this.getRectUnderMouseInsideEdges(data);
+                const labelRectUnderMouseNearEdges: LabelRect = this.getRectUnderMouseNearEdges(data);
                 
-                if (!!labelRect && !this.isInProgress()) {
-                    if (LabelsSelector.getHighlightedLabelId() !== labelRect.id) {
-                        store.dispatch(updateHighlightedLabelId(labelRect.id))
+                if (!!labelRectUnderMouseInsideEdges && !this.isInProgress()) {
+                    if (LabelsSelector.getHighlightedLabelId() !== labelRectUnderMouseInsideEdges.id) {
+                        store.dispatch(updateHighlightedLabelId(labelRectUnderMouseInsideEdges.id))
                     }
 
-                    console.log("Mouse move detected");
                     let mousePositionOnViewPortContent = RenderEngineUtil.transferPointFromViewPortContentToImage(data.mousePositionOnViewPortContent, data)
+
                     let previousMousePositionOnViewPortContent = RenderEngineUtil.transferPointFromViewPortContentToImage(this.previousMousePosition, data)
 
                     let delta:IPoint = { x: mousePositionOnViewPortContent.x - previousMousePositionOnViewPortContent.x,
                         y: mousePositionOnViewPortContent.y - previousMousePositionOnViewPortContent.y }
-                        
-                    console.log(delta);
-
-                    const delta2: IPoint = PointUtil.subtract(data.mousePositionOnViewPortContent, this.previousMousePosition);
 
                     if(this.isRectUnderMouseDraggable) {
-                        // const rect: IRect = this.calculateRectRelativeToActiveImage(labelRect.rect, data);
-                        const translatedRect: IRect = RectUtil.translate(labelRect.rect, delta)
+                        const translatedRect: IRect = RectUtil.translate(labelRectUnderMouseInsideEdges.rect, delta)
     
                         const imageData = LabelsSelector.getActiveImageData();
-                        imageData.labelRects = imageData.labelRects.map((rect: LabelRect) => {
-                            if (rect.id === labelRect.id) {
-                                return {
-                                    ...labelRect,
-                                    rect: translatedRect
-                                };
-                            }
-                            return labelRect;
-                        });
-                        store.dispatch(updateImageDataById(imageData.id, imageData));
 
+                        let labelRectIndexToUpdate = imageData.labelRects.findIndex((labelRect: LabelRect) => labelRect.id === labelRectUnderMouseInsideEdges.id );
+
+                        if(labelRectIndexToUpdate !== -1) {
+                            imageData.labelRects[labelRectIndexToUpdate] = {
+                                ...imageData.labelRects[labelRectIndexToUpdate],
+                                rect: translatedRect
+                            }
+                        }
+
+                        store.dispatch(updateImageDataById(imageData.id, imageData));
                     }
 
-
-
+                } else if (!!labelRectUnderMouseNearEdges && !this.isInProgress()) {
+                    if (LabelsSelector.getHighlightedLabelId() !== labelRectUnderMouseNearEdges.id) {
+                        store.dispatch(updateHighlightedLabelId(labelRectUnderMouseNearEdges.id))
+                    }
                 } else {
                     if (LabelsSelector.getHighlightedLabelId() !== null) {
                         store.dispatch(updateHighlightedLabelId(null))
@@ -194,10 +191,6 @@ export class RectRenderEngine extends BaseRenderEngine {
             this.drawCurrentlyCreatedRect(data.mousePositionOnViewPortContent, data.viewPortContentImageRect);
             this.updateCursorStyle(data);
         }
-    }
-
-    private dragSelectedRect() {
-
     }
 
     private drawCurrentlyCreatedRect(mousePosition: IPoint, imageRect: IRect) {
