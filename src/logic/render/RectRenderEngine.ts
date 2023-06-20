@@ -133,12 +133,12 @@ export class RectRenderEngine extends BaseRenderEngine {
                         store.dispatch(updateHighlightedLabelId(labelRectUnderMouseInsideEdges.id))
                     }
 
-                    let mousePositionOnViewPortContent = RenderEngineUtil.transferPointFromViewPortContentToImage(data.mousePositionOnViewPortContent, data)
+                    let mousePositionOnImage = RenderEngineUtil.transferPointFromViewPortContentToImage(data.mousePositionOnViewPortContent, data)
 
-                    let previousMousePositionOnViewPortContent = RenderEngineUtil.transferPointFromViewPortContentToImage(this.previousMousePosition, data)
+                    let previousMousePositionOnImage = RenderEngineUtil.transferPointFromViewPortContentToImage(this.previousMousePosition, data)
 
-                    let delta:IPoint = { x: mousePositionOnViewPortContent.x - previousMousePositionOnViewPortContent.x,
-                        y: mousePositionOnViewPortContent.y - previousMousePositionOnViewPortContent.y }
+                    let delta:IPoint = { x: mousePositionOnImage.x - previousMousePositionOnImage.x,
+                        y: mousePositionOnImage.y - previousMousePositionOnImage.y }
 
                     if(this.isRectUnderMouseDraggable) {
                         const translatedRect: IRect = RectUtil.translate(labelRectUnderMouseInsideEdges.rect, delta)
